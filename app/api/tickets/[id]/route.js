@@ -1,60 +1,80 @@
-import { NextRequest, NextResponse } from "next/server";
-import { fakeUsers } from "../../../data/ticketsData"; // Adjust the path if needed
+// app/api/tickets/[id]/route.js
 
-// GET request to fetch a specific ticket by id
-export async function GET({ params }) {
-  const { id } = params;  // Dynamically extract 'id' from params
-  const ticket = fakeUsers.find((ticket) => ticket.id === id);
+import clientPromise from '../../../lib/mongoose';
 
-  if (!ticket) {
-    return NextResponse.json({ message: "Ticket not found" }, { status: 404 });
-  }
+// app/api/tickets/[id]/route.js
+import { ObjectId } from 'mongodb';
+import mongoose from 'mongoose';  // Ensure mongoose is imported
+import { NextResponse } from 'next/server';
 
-  return NextResponse.json(ticket);
-}
+// Define a schema and model for your 'tickets' collection if not already defined
+const ticketSchema = new mongoose.Schema({
+  // Your ticket schema definition here
+});
+const Ticket = mongoose.models.Ticket || mongoose.model('Ticket', ticketSchema);
 
-// PUT request to update a specific ticket by id
-export async function PUT(req, { params }) {
-  const { id } = await params;  // Dynamically extract 'id' from params
 
-  // Ensure id is present in params
-  if (!id) {
-    return new NextResponse(JSON.stringify({ message: "Ticket ID is required" }), { status: 400 });
-  }
+// PUT: Update a specific ticket by ID
+export async function PUT(req, context) {
+  const { params } = context; // Extract `params` from `context`
+  const { id } = await params; // Await `params` explicitly
 
-  // Find the ticket by its ID
-  const ticketIndex = fakeUsers.findIndex((ticket) => ticket.id === id);
-
-  // If the ticket is not found, return an error
-  if (ticketIndex === -1) {
-    return new NextResponse(JSON.stringify({ message: "Ticket not found" }), { status: 404 });
-  }
-
-  // Parse the request body to get the updated ticket data
-  const updatedTicket = await req.json();
-
-  // Update the ticket with new data
-  fakeUsers[ticketIndex] = { ...fakeUsers[ticketIndex], ...updatedTicket };
-
-  // Return the updated ticket as a JSON response
-  return new NextResponse(JSON.stringify(fakeUsers[ticketIndex]), { status: 200 });
-}
-
-// DELETE request to delete a specific ticket by id
-export async function DELETE({ params }) {
-  const { id } = params;  // Dynamically extract 'id' from params
-
-  // Ensure id is present in params
   if (!id) {
     return NextResponse.json({ message: "Ticket ID is required" }, { status: 400 });
   }
 
-  const ticketIndex = fakeUsers.findIndex((ticket) => ticket.id === id);
-
-  if (ticketIndex === -1) {
-    return NextResponse.json({ message: "Ticket not found" }, { status: 404 });
+  // Ensure the id is a valid ObjectId string
+  if (!ObjectId.isValid(id)) {
+    return NextResponse.json({ message: "Invalid Ticket ID" }, { status: 400 });
   }
 
-  fakeUsers.splice(ticketIndex, 1);  // Remove the ticket from the list
-  return NextResponse.json({ message: "Ticket deleted successfully" });
+  const updatedData = await req.json(); // Parse the request body
+
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);  // Ensure mongoose is connected
+
+    const result = await Ticket.updateOne(
+      { _id: new ObjectId(id) }, // Convert id to ObjectId
+      { $set: updatedData } // Update with the new data
+    );
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ message: "Ticket not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: "Ticket updated successfully" }, { status: 200 });
+  } catch (err) {
+    console.error("Error updating ticket:", err);
+    return NextResponse.json({ error: "Failed to update ticket" }, { status: 500 });
+  }
+}
+
+// DELETE: Delete a specific ticket by ID
+export async function DELETE(req, context) {
+  const { params } = context;
+  const { id } = await params; // Await `params` explicitly
+
+  if (!id) {
+    return NextResponse.json({ message: "Ticket ID is required" }, { status: 400 });
+  }
+
+  // Ensure the id is a valid ObjectId string
+  if (!ObjectId.isValid(id)) {
+    return NextResponse.json({ message: "Invalid Ticket ID" }, { status: 400 });
+  }
+
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);  // Ensure mongoose is connected
+
+    const result = await Ticket.deleteOne({ _id: new ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ message: "Ticket not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: "Ticket deleted successfully" }, { status: 200 });
+  } catch (err) {
+    console.error("Error deleting ticket:", err);
+    return NextResponse.json({ error: "Failed to delete ticket" }, { status: 500 });
+  }
 }

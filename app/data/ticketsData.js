@@ -5,7 +5,7 @@ export const fakeUsers = [
     description: "User cannot log in.",
     priority: "High",
     status: "In Progress",
-    assignedTo: "John Doe",
+    assigned_to: "John Doe",
     date: "31/12/2024, 4:38:54 pm	"
   },
   {
@@ -14,7 +14,7 @@ export const fakeUsers = [
     description: "Homepage takes too long to load.",
     priority: "Medium",
     status: "Open",
-    assignedTo: "Jane Doe",
+    assigned_to: "Jane Doe",
     date: "31/12/2024, 4:38:54 pm	"
   },
 ];

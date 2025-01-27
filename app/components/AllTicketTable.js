@@ -17,30 +17,18 @@ export default function TicketTable({ tickets, handleStatusChange, openEditModal
         </thead>
         <tbody>
           {tickets.map((ticket) => (
-            <tr key={ticket.id} className="border-b hover:bg-gray-50">
-              <td className="px-4 py-2">{ticket.id}</td>
+            <tr key={ticket._id} className="border-b hover:bg-gray-50">
+              <td className="px-4 py-2">{ticket.ticket_id}</td>
               <td className="px-4 py-2">{ticket.title}</td>
               <td className="px-4 py-2">{ticket.description}</td>
               <td className="px-4 py-2">{ticket.priority}</td>
-              <td className="px-4 py-2">
-                {/* Status dropdown */}
-                <select
-                  value={ticket.priority}
-                  onChange={(e) => handleStatusChange(ticket.id, e.target.value)} // This triggers the status change
-                  className="w-full p-2 border rounded-lg"
-                >
-                  <option value="Open">Open</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Closed">Closed</option>
-                </select>
-              </td>
-              <td className="px-4 py-2">{ticket.assignedTo}</td>
-              <td className="px-4 py-2">{ticket.date}</td>
+              <td className="px-4 py-2">{ticket.assigned_to}</td>
+              <td className="px-4 py-2">{new Date(ticket.created_date).toLocaleDateString()}</td>
               <td className="px-4 py-2">
                 {/* Status dropdown */}
                 <select
                   value={ticket.status}
-                  onChange={(e) => handleStatusChange(ticket.id, e.target.value)} // This triggers the status change
+                  onChange={(e) => handleStatusChange(ticket._id, e.target.value)} // This triggers the status change
                   className="w-full p-2 border rounded-lg"
                 >
                   <option value="Open">Open</option>
@@ -58,7 +46,7 @@ export default function TicketTable({ tickets, handleStatusChange, openEditModal
                 </button>
                 {/* Close Button (used for closing the ticket) */}
                 <button
-                  onClick={() => handleStatusChange(ticket.id, "Closed")}
+                  onClick={() => handleStatusChange(ticket._id, "Closed")}
                   className="bg-red-500 text-white py-1 px-3 rounded-lg hover:bg-red-600"
                 >
                   Close
